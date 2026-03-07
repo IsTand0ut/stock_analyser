@@ -1,0 +1,26 @@
+# Stock Analyzer — Agent Rules
+
+## Stack
+- Backend: FastAPI + Pydantic v2 + SQLAlchemy async + Alembic
+- Cache: Redis with aioredis, TTL-based (60s quotes, 1h history, 24h fundamentals)
+- Queue: Celery + Redis broker
+- Data: yfinance for market data, pandas-ta for indicators
+- Auth: JWT via python-jose + passlib bcrypt
+- Frontend: React 18 + TypeScript + Vite + TanStack Query + Zustand + Recharts + lightweight-charts
+
+## Hard Rules
+- Always use async/await — never block the event loop
+- All endpoints must return typed Pydantic response models
+- Never hardcode secrets — use Pydantic BaseSettings from .env
+- Use structlog for all logging, never print()
+- All external API calls must use tenacity retry (3 attempts, exponential backoff)
+- WebSocket auth via JWT query param (browsers can't set WS headers)
+
+## Structure
+- /backend/app/api/v1/ — route handlers only, no business logic
+- /backend/app/services/ — all business logic lives here
+- /backend/app/models/ — SQLAlchemy ORM
+- /backend/app/schemas/ — Pydantic request/response schemas
+- /frontend/src/hooks/ — all data fetching via custom hooks
+- /frontend/src/api/ — Axios client + typed API functions
+- /frontend/src/store/ — Zustand global state only
