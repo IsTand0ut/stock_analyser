@@ -8,7 +8,7 @@ A full-stack, production-grade stock analysis platform built for equities interv
 
 ## Features
 
-| Feature | Status |
+| Feature | Status | 
 |---|---|
 | Real-time WebSocket price feed | Scaffolded |
 | Historical OHLCV charts | Scaffolded |
