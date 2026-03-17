@@ -15,7 +15,11 @@ class PortfolioService:
     """Handles CRUD for portfolios and holdings, plus P&L logic."""
 
     async def get_portfolios(self, db: AsyncSession, user_id: int) -> List[Portfolio]:
-        result = await db.execute(select(Portfolio).where(Portfolio.user_id == user_id))
+        result = await db.execute(
+            select(Portfolio)
+            .where(Portfolio.user_id == user_id)
+            .options(selectinload(Portfolio.holdings))
+        )
         return list(result.scalars().all())
 
     async def create_portfolio(self, db: AsyncSession, user_id: int, name: str, description: str = "") -> Portfolio:

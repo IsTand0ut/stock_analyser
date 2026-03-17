@@ -21,9 +21,7 @@ venv/
 htmlcov/
 .pytest_cache/
 
-# Alembic
-backend/migrations/versions/*.py
-!backend/migrations/versions/.gitkeep
+# Alembic — version files MUST be committed (needed for `alembic upgrade head` on Render)
 
 # Node
 node_modules/

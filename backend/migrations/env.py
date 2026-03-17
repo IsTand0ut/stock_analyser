@@ -24,7 +24,10 @@ from app.core.config import settings
 config = context.config
 
 # Override sqlalchemy.url from Pydantic settings (ignores alembic.ini placeholder)
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+# For Neon/asyncpg, strip sslmode/channel_binding from the URL (passed via connect_args instead)
+from app.core.database import _clean_db_url
+_migration_url, _ = _clean_db_url(settings.DATABASE_URL)
+config.set_main_option("sqlalchemy.url", _migration_url)
 
 # Interpret the config file for Python logging
 if config.config_file_name is not None:
@@ -54,10 +57,13 @@ def do_run_migrations(connection):
 
 async def run_async_migrations() -> None:
     """Run migrations in 'online' async mode."""
+    # For Neon (asyncpg), SSL must be passed via connect_args, not URL params.
+    _, _connect_args = _clean_db_url(settings.DATABASE_URL)
     connectable = async_engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
+        connect_args=_connect_args,
     )
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)

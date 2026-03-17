@@ -23,22 +23,36 @@ class ValuationService:
         Calculate intrinsic value using a 2-stage Discounted Cash Flow model.
         """
         def _fetch_fundamentals():
-            t = yf.Ticker(ticker)
-            info = t.info
-            
-            # Try to get FCF from info or calculate from cash flow statement
-            fcf = info.get("freeCashflow")
-            if fcf is None:
-                cf = t.cashflow
-                if not cf.empty and "Free Cash Flow" in cf.index:
-                    fcf = cf.loc["Free Cash Flow"].iloc[0]
-                elif not cf.empty and "Operating Cash Flow" in cf.index and "Capital Expenditure" in cf.index:
-                    fcf = cf.loc["Operating Cash Flow"].iloc[0] + cf.loc["Capital Expenditure"].iloc[0]
-            
-            shares = info.get("sharesOutstanding")
-            current_price = info.get("currentPrice") or info.get("regularMarketPrice")
-            
-            return fcf, shares, current_price
+            try:
+                t = yf.Ticker(ticker)
+                info = t.info or {}
+                fi = t.fast_info
+
+                # FCF: prefer info, fall back to cashflow statement
+                fcf = info.get("freeCashflow")
+                if fcf is None:
+                    cf = t.cashflow
+                    if cf is not None and not cf.empty:
+                        if "Free Cash Flow" in cf.index:
+                            fcf = float(cf.loc["Free Cash Flow"].iloc[0])
+                        elif "Operating Cash Flow" in cf.index and "Capital Expenditure" in cf.index:
+                            fcf = float(cf.loc["Operating Cash Flow"].iloc[0]) + float(cf.loc["Capital Expenditure"].iloc[0])
+
+                # Shares: prefer info, then fast_info.shares
+                shares = info.get("sharesOutstanding") or getattr(fi, "shares", None)
+
+                # Current price: prefer info, then fast_info.last_price
+                current_price = (
+                    info.get("currentPrice")
+                    or info.get("regularMarketPrice")
+                    or getattr(fi, "last_price", None)
+                )
+
+                return fcf, shares, current_price
+            except Exception as e:
+                log.warning("valuation_fetch_error", ticker=ticker, error=str(e))
+                return None, None, None
+
 
         fcf, shares, current_price = await asyncio.to_thread(_fetch_fundamentals)
 
@@ -82,8 +96,9 @@ class ValuationService:
             "upside_pct": round(upside_pct, 2),
             "pv_stage1": round(pv_stage1, 2),
             "pv_terminal": round(pv_terminal, 2),
-            "shares_outstanding": shares,
-            "base_fcf": fcf
+            "shares_outstanding": int(shares),
+            "base_fcf": float(fcf),
+            "error": None
         }
 
 

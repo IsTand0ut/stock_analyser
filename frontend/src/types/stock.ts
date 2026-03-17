@@ -32,19 +32,14 @@ export interface HistoricalData {
 
 export interface Fundamentals {
   ticker: string;
-  sector: string | null;
-  industry: string | null;
   pe_ratio: number | null;
-  forward_pe: number | null;
   eps: number | null;
-  revenue: number | null;
-  gross_margin: number | null;
-  operating_margin: number | null;
   roe: number | null;
   debt_to_equity: number | null;
   free_cash_flow: number | null;
-  dividend_yield: number | null;
   beta: number | null;
+  gross_margin: number | null;
+  operating_margin: number | null;
 }
 
 export interface NewsItem {

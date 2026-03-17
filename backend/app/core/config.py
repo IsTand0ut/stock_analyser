@@ -38,6 +38,11 @@ class Settings(BaseSettings):
     NEWS_API_KEY: str = ""
     POLYGON_API_KEY: str = ""
 
+    # --- Alpaca Paper Trading ---
+    ALPACA_API_KEY: str = ""
+    ALPACA_SECRET_KEY: str = ""
+    ALPACA_BASE_URL: str = "https://paper-api.alpaca.markets"
+
     # --- Celery ---
     CELERY_BROKER_URL: str = "redis://localhost:6379/1"
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/2"

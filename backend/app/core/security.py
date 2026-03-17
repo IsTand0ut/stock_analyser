@@ -49,10 +49,10 @@ def create_refresh_token(data: dict) -> str:
 async def get_current_user(
     token: str = Depends(oauth2_scheme), 
     db: AsyncSession = Depends(get_db)
-) -> User:
+) -> int:
     """
-    Decodes the JWT, fetches the user from the database, and returns the User ORM object.
-    Raies 401 on any validation failure.
+    Decodes the JWT, fetches the user from the database, and returns the user ID (int).
+    Raises 401 on any validation failure.
     """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -77,7 +77,7 @@ async def get_current_user(
     if user is None:
         raise credentials_exception
         
-    return user
+    return user.id
 
 
 async def verify_ws_token(token: str) -> bool:

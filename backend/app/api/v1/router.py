@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1 import auth, stocks, portfolio, analytics, alerts, ws
+from app.api.v1 import auth, stocks, portfolio, analytics, alerts, ws, trading
 
 api_router = APIRouter()
 
@@ -10,3 +10,5 @@ api_router.include_router(portfolio.router, prefix="/portfolio", tags=["portfoli
 api_router.include_router(analytics.router, prefix="/analytics", tags=["analytics"])
 api_router.include_router(alerts.router, prefix="/alerts", tags=["alerts"])
 api_router.include_router(ws.router, prefix="/ws", tags=["websocket"])
+api_router.include_router(trading.router, prefix="/trading", tags=["Paper Trading"])
+

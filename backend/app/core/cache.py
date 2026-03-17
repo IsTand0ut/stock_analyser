@@ -11,11 +11,19 @@ _redis: Optional[redis.Redis] = None
 async def init_cache() -> None:
     """Called during app startup lifespan."""
     global _redis
-    _redis = await redis.from_url(
-        settings.REDIS_URL,
-        encoding="utf-8",
-        decode_responses=True,
-    )
+    try:
+        # redis.from_url is synchronous in redis-py v4+; no await here.
+        _redis = redis.from_url(
+            settings.REDIS_URL,
+            encoding="utf-8",
+            decode_responses=True,
+        )
+        # Ping to verify connection
+        await _redis.ping()
+    except Exception as e:
+        import logging
+        logging.warning(f"Redis unavailable, caching disabled: {e}")
+        _redis = None
 
 
 async def get_redis() -> redis.Redis:
