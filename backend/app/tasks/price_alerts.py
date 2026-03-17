@@ -5,7 +5,7 @@ from sqlalchemy import select, update
 from sqlalchemy.orm import selectinload
 
 from app.tasks.celery_app import celery_app
-from app.core.database import async_session_factory
+from app.core.database import AsyncSessionLocal
 from app.models.alert import PriceAlert
 from app.services.market_data import market_data_service
 import structlog
@@ -14,7 +14,7 @@ log = structlog.get_logger()
 
 async def _check_alerts_logic():
     """Logic to check all active alerts."""
-    async with async_session_factory() as db:
+    async with AsyncSessionLocal() as db:
         result = await db.execute(
             select(PriceAlert).where(PriceAlert.is_active == True)
         )
