@@ -5,7 +5,7 @@ services:
     runtime: docker
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
-    startCommand: ./start.sh
+    dockerCommand: ./start.sh
     plan: free
     envVars:
       - key: APP_ENV
@@ -45,7 +45,7 @@ services:
     runtime: docker
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
-    startCommand: celery -A app.tasks.celery_app worker --loglevel=info --concurrency=2
+    dockerCommand: celery -A app.tasks.celery_app worker --loglevel=info --concurrency=2
     plan: free
     envVars:
       - key: APP_ENV
