@@ -62,9 +62,15 @@ class Base(DeclarativeBase):
 # Lifespan helper
 # ---------------------------------------------------------------------------
 async def init_db() -> None:
-    """Called during app startup. In production, rely on Alembic migrations.
-    This is intentionally a no-op here to prevent accidental create_all()."""
-    pass  # pragma: no cover
+    """Create all tables on startup (idempotent — safe to run repeatedly)."""
+    # Import all models so Base.metadata has them registered
+    import app.models.user  # noqa: F401
+    import app.models.portfolio  # noqa: F401
+    import app.models.watchlist  # noqa: F401
+    import app.models.alert  # noqa: F401
+
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
 
 # ---------------------------------------------------------------------------

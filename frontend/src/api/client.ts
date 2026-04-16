@@ -1,8 +1,10 @@
 // API client — Axios instance with JWT interceptors
 import axios from 'axios';
 
+const API_BASE_URL = (import.meta.env.VITE_API_URL as string) || '/api/v1';
+
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api/v1',
+  baseURL: API_BASE_URL,
   headers: { 'Content-Type': 'application/json' },
   timeout: 10_000,
 });

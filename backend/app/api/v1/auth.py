@@ -21,10 +21,18 @@ async def register(data: RegisterRequest, db: AsyncSession = Depends(get_db)):
             detail="Email or username already registered"
         )
         
+    try:
+        hashed_password = hash_password(data.password)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc)
+        )
+
     user = User(
         email=data.email,
         username=data.username,
-        hashed_password=hash_password(data.password)
+        hashed_password=hashed_password
     )
     db.add(user)
     await db.commit()

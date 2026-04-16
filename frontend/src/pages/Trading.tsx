@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   fetchAccount, fetchPositions, fetchOrders,
@@ -9,7 +9,7 @@ import { TradeModal } from '@/components/trading/TradeModal';
 import { formatCurrency, formatPct } from '@/utils/formatters';
 import {
   TrendingUp, TrendingDown, Wallet, Activity,
-  DollarSign, Plus, X, AlertTriangle, Zap,
+  DollarSign, X, AlertTriangle, Zap,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -57,11 +57,6 @@ export function Trading() {
   const qc = useQueryClient();
   const [activeTab, setActiveTab] = useState<'positions' | 'orders'>('positions');
   const [showModal, setShowModal] = useState(false);
-  const [orderSymbol, setOrderSymbol] = useState('');
-  const [orderSide, setOrderSide] = useState<'buy' | 'sell'>('buy');
-  const [orderType, setOrderType] = useState<'market' | 'limit'>('market');
-  const [orderQty, setOrderQty] = useState('');
-  const [limitPx, setLimitPx] = useState('');
 
   const { data: account, isError: acctError, isLoading: acctLoading } = useQuery({
     queryKey: ['trading-account'],
@@ -69,15 +64,15 @@ export function Trading() {
     refetchInterval: 30_000,
   });
 
-  const { data: positions = [], isLoading: posLoading } = useQuery({
+  const { data: positions = [], isLoading: posLoading } = useQuery<any[]>({
     queryKey: ['trading-positions'],
     queryFn: fetchPositions,
     refetchInterval: 30_000,
   });
 
-  const { data: orders = [], isLoading: ordLoading } = useQuery({
+  const { data: orders = [], isLoading: ordLoading } = useQuery<any[]>({
     queryKey: ['trading-orders'],
-    queryFn: fetchOrders,
+    queryFn: () => fetchOrders(),
   });
 
   const { mutate: doCancel } = useMutation({
@@ -136,7 +131,7 @@ ALPACA_SECRET_KEY=your_secret_here`}
     <AppLayout>
       {showModal && (
         <TradeModal
-          ticker={orderSymbol || 'AAPL'}
+          ticker={'AAPL'}
           currentPrice={undefined}
           onClose={() => setShowModal(false)}
         />

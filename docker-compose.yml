@@ -1,9 +1,4 @@
-version: "3.9"
-
 services:
-  # ---------------------------------------------------------------------------
-  # Database
-  # ---------------------------------------------------------------------------
   db:
     image: postgres:16-alpine
     environment:
@@ -20,32 +15,26 @@ services:
       timeout: 5s
       retries: 5
 
-  # ---------------------------------------------------------------------------
-  # Cache + Message Broker
-  # ---------------------------------------------------------------------------
   redis:
     image: redis:7-alpine
     command: redis-server --appendonly yes
     volumes:
       - redis_data:/data
     ports:
-      - "6379:6379"
+      - "6380:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # ---------------------------------------------------------------------------
-  # FastAPI Backend
-  # ---------------------------------------------------------------------------
   backend:
     build: ./backend
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     volumes:
       - ./backend:/app
     ports:
-      - "8000:8000"
+      - "8001:8000"
     env_file: ./backend/.env
     environment:
       - DATABASE_URL=postgresql+asyncpg://stockuser:password@db:5432/stockdb
@@ -58,71 +47,12 @@ services:
       redis:
         condition: service_healthy
 
-  # ---------------------------------------------------------------------------
-  # Celery Worker
-  # ---------------------------------------------------------------------------
-  celery_worker:
-    build: ./backend
-    command: celery -A app.tasks.celery_app worker --loglevel=info --concurrency=4
-    volumes:
-      - ./backend:/app
-    env_file: ./backend/.env
-    environment:
-      - DATABASE_URL=postgresql+asyncpg://stockuser:password@db:5432/stockdb
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/1
-      - CELERY_RESULT_BACKEND=redis://redis:6379/2
-    depends_on:
-      - backend
-      - redis
-
-  # ---------------------------------------------------------------------------
-  # Celery Beat (Scheduler)
-  # ---------------------------------------------------------------------------
-  celery_beat:
-    build: ./backend
-    command: celery -A app.tasks.celery_app beat --loglevel=info
-    volumes:
-      - ./backend:/app
-    env_file: ./backend/.env
-    environment:
-      - DATABASE_URL=postgresql+asyncpg://stockuser:password@db:5432/stockdb
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/1
-      - CELERY_RESULT_BACKEND=redis://redis:6379/2
-    depends_on:
-      - celery_worker
-
-  # ---------------------------------------------------------------------------
-  # Flower — Celery monitoring UI
-  # ---------------------------------------------------------------------------
-  flower:
-    build: ./backend
-    command: celery -A app.tasks.celery_app flower --port=5555
-    ports:
-      - "5555:5555"
-    env_file: ./backend/.env
-    environment:
-      - DATABASE_URL=postgresql+asyncpg://stockuser:password@db:5432/stockdb
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/1
-      - CELERY_RESULT_BACKEND=redis://redis:6379/2
-    depends_on:
-      - celery_worker
-
-  # ---------------------------------------------------------------------------
-  # React Frontend (dev server)
-  # ---------------------------------------------------------------------------
   frontend:
     build: ./frontend
     ports:
-      - "5173:5173"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    environment:
-      - VITE_API_URL=http://localhost:8000/api/v1
-      - VITE_WS_URL=ws://localhost:8000/ws
+      - "3000:80"
+    depends_on:
+      - backend
 
 volumes:
   postgres_data:

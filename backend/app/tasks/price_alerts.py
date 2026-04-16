@@ -43,13 +43,11 @@ async def _check_alerts_logic():
 @celery_app.task
 def check_alerts():
     """Celery wrapper for alert checking."""
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(_check_alerts_logic())
+    asyncio.run(_check_alerts_logic())
 
 @celery_app.task
 def warm_cache():
     """Warms the market data cache for popular tickers."""
-    # Logic to fetch data for top 50 tickers to keep cache fresh
     tickers = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "NVDA", "BRK-B", "META", "UNH", "V"]
     
     async def _warm():
@@ -60,5 +58,4 @@ def warm_cache():
             except Exception:
                 pass
                 
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(_warm())
+    asyncio.run(_warm())

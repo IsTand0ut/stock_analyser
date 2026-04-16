@@ -1,4 +1,6 @@
+import json
 from contextlib import asynccontextmanager
+from typing import List, Union
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -18,13 +20,25 @@ from app.middleware.logging import RequestLoggingMiddleware
 from app.middleware.timing import TimingMiddleware
 
 
+def _get_cors_origins() -> List[str]:
+    """Parse CORS_ORIGINS from settings (handles both list and JSON string)."""
+    origins = settings.CORS_ORIGINS
+    if isinstance(origins, str):
+        try:
+            origins = json.loads(origins)
+        except json.JSONDecodeError:
+            origins = [origins]
+    if isinstance(origins, list):
+        return origins
+    return [str(origins)]
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup: initialize database pool and Redis. Shutdown: close gracefully."""
     await init_db()
     await init_cache()
     yield
-    # Connections are closed automatically by the async context managers inside each module.
 
 
 def create_app() -> FastAPI:
@@ -46,7 +60,7 @@ def create_app() -> FastAPI:
     app.add_middleware(GZipMiddleware, minimum_size=1000)
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.CORS_ORIGINS,
+        allow_origins=_get_cors_origins(),
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

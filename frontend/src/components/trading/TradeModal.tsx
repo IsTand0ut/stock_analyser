@@ -36,7 +36,7 @@ export function TradeModal({ ticker, currentPrice, onClose }: TradeModalProps) {
       }
       return placeMarketOrder(ticker, q, side);
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       const type = orderType === 'limit' ? `@ $${limitPx}` : '@ Market';
       toast.success(`Order placed — ${ticker} ×${qty} ${side.toUpperCase()} ${type}`);
       qc.invalidateQueries({ queryKey: ['trading-positions'] });

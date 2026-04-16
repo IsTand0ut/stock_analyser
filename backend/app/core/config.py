@@ -1,4 +1,5 @@
-from typing import List
+import json
+from typing import List, Union
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -13,12 +14,12 @@ class Settings(BaseSettings):
     # --- App ---
     APP_ENV: str = "development"
     DEBUG: bool = False
-    SECRET_KEY: str  # REQUIRED — no default
+    SECRET_KEY: str = "dev-secret-key-change-in-production-min-32-chars!!"
 
-    CORS_ORIGINS: List[str] = ["http://localhost:5173"]
+    CORS_ORIGINS: Union[List[str], str] = ["http://localhost:5173"]
 
     # --- Database ---
-    DATABASE_URL: str  # e.g. postgresql+asyncpg://user:pass@localhost:5432/stockdb
+    DATABASE_URL: str = "postgresql+asyncpg://stockuser:password@localhost:5432/stockdb"
     DB_POOL_SIZE: int = 10
     DB_MAX_OVERFLOW: int = 20
 

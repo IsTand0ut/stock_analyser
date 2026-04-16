@@ -12,7 +12,7 @@ const RANGES = ['1D', '1W', '1M', '3M', '6M', '1Y', '5Y'] as const;
 const TABS = ['Overview', 'Fundamentals', 'News'] as const;
 type Tab = typeof TABS[number];
 
-function MiniPriceChart({ history, quote }: { history: any; quote: any }) {
+function MiniPriceChart({ history, quote: _quote }: { history: any; quote: any }) {
   if (!history?.data || history.data.length === 0) {
     return (
       <div className="h-64 flex items-center justify-center" style={{ color: 'var(--text-muted)' }}>
@@ -34,6 +34,21 @@ function MiniPriceChart({ history, quote }: { history: any; quote: any }) {
   const raw = history.data;
   const step = Math.max(1, Math.floor(raw.length / 200));
   const pts = raw.filter((_: any, i: number) => i % step === 0);
+
+  if (pts.length === 1) {
+    const only = pts[0];
+    return (
+      <div className="h-64 flex items-center justify-center" style={{ color: 'var(--text-muted)' }}>
+        <div className="text-center">
+          <BarChart2 className="w-8 h-8 mx-auto mb-2 opacity-30" />
+          <p className="text-sm">Limited history available for this symbol</p>
+          <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
+            Latest close: {formatCurrency(only.close)}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const closes = pts.map((b: any) => b.close);
   const minC = Math.min(...closes);
@@ -154,6 +169,25 @@ function FundamentalsTable({ fundamentals }: { fundamentals: any }) {
   if (!fundamentals) return (
     <div className="py-12 text-center" style={{ color: 'var(--text-muted)' }}>Loading fundamentals…</div>
   );
+
+  const hasAnyMetric = [
+    fundamentals.pe_ratio,
+    fundamentals.eps,
+    fundamentals.roe,
+    fundamentals.debt_to_equity,
+    fundamentals.free_cash_flow,
+    fundamentals.beta,
+    fundamentals.gross_margin,
+    fundamentals.operating_margin,
+  ].some((v) => v !== null && v !== undefined);
+
+  if (!hasAnyMetric) {
+    return (
+      <div className="px-4 py-8 text-sm" style={{ color: 'var(--text-muted)' }}>
+        Fundamental metrics are temporarily unavailable from the upstream provider.
+      </div>
+    );
+  }
 
   const rows = [
     { label: 'P/E Ratio',        value: fundamentals.pe_ratio?.toFixed(2) },

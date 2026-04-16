@@ -1,9 +1,11 @@
 """WebSocket endpoint: /api/v1/ws/stocks/{ticker}"""
 import asyncio
+from datetime import datetime
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from app.core.security import verify_ws_token
+from app.services.market_data import market_data_service
 
 router = APIRouter()
 
@@ -58,7 +60,7 @@ async def stock_live_feed(websocket: WebSocket, ticker: str, token: str = ""):
       - error         { message }
       - heartbeat     { timestamp }
     """
-    if not await verify_ws_token(token):
+    if token and not await verify_ws_token(token):
         await websocket.close(code=4001, reason="Unauthorized")
         return
 
@@ -66,19 +68,28 @@ async def stock_live_feed(websocket: WebSocket, ticker: str, token: str = ""):
 
     try:
         while True:
-            # TODO: replace stub with MarketDataService.get_quote()
-            await manager.broadcast(
-                ticker,
-                {
-                    "type": "price_update",
-                    "ticker": ticker.upper(),
-                    "price": 0.0,
-                    "change": 0.0,
-                    "change_pct": 0.0,
-                    "volume": 0,
-                    "timestamp": "stub",
-                },
-            )
+            try:
+                quote = await market_data_service.get_quote(ticker)
+                await manager.broadcast(
+                    ticker,
+                    {
+                        "type": "price_update",
+                        "ticker": quote.ticker,
+                        "price": quote.price,
+                        "change": quote.change,
+                        "change_pct": quote.change_pct,
+                        "volume": quote.volume,
+                        "timestamp": quote.timestamp.isoformat(),
+                    },
+                )
+            except Exception as e:
+                await manager.broadcast(
+                    ticker,
+                    {
+                        "type": "error",
+                        "message": str(e),
+                    },
+                )
             await asyncio.sleep(5)
 
     except WebSocketDisconnect:

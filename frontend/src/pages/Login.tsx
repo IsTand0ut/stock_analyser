@@ -4,6 +4,30 @@ import { login, register } from '@/api/auth';
 import { useState } from 'react';
 import { BarChart2, Mail, Lock, User, ArrowRight, Eye, EyeOff } from 'lucide-react';
 
+const toErrorMessage = (err: unknown, fallback: string): string => {
+  const detail = (err as { response?: { data?: { detail?: unknown } } })?.response?.data?.detail;
+
+  if (typeof detail === 'string') return detail;
+
+  if (Array.isArray(detail) && detail.length > 0) {
+    const first = detail[0] as { msg?: unknown; loc?: unknown } | string;
+    if (typeof first === 'string') return first;
+    if (first && typeof first === 'object') {
+      const msg = typeof first.msg === 'string' ? first.msg : null;
+      const loc = Array.isArray(first.loc) ? first.loc.join('.') : null;
+      if (msg && loc) return `${msg} (${loc})`;
+      if (msg) return msg;
+    }
+  }
+
+  if (detail && typeof detail === 'object' && 'msg' in detail) {
+    const msg = (detail as { msg?: unknown }).msg;
+    if (typeof msg === 'string') return msg;
+  }
+
+  return fallback;
+};
+
 export function Login() {
   const { setTokens } = useAuthStore();
   const navigate = useNavigate();
@@ -32,8 +56,15 @@ export function Login() {
         setTokens(data.access_token, data.refresh_token);
         navigate('/');
       }
-    } catch {
-      setError(isLogin ? 'Invalid credentials. Please try again.' : 'Registration failed. Email may already be in use.');
+    } catch (error) {
+      setError(
+        toErrorMessage(
+          error,
+          isLogin
+            ? 'Invalid credentials. Please try again.'
+            : 'Registration failed. Email may already be in use.'
+        )
+      );
     } finally {
       setLoading(false);
     }
